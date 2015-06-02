@@ -1,6 +1,9 @@
 #include "MSAOpenCL.h"
 #include "MSAOpenCLProgram.h"
 #include "MSAOpenCLKernel.h"
+#ifdef _WIN32
+#include <Windows.h>
+#endif
 
 namespace msa { 
 	
@@ -124,7 +127,18 @@ namespace msa {
 		}	
 		
 		string Options;
-		Options += "-I \"" + ofToDataPath("") + "\" ";
+		string dataPath = ofToDataPath("");
+#ifdef _WIN32
+		long length = 0;
+		length = GetShortPathNameA(dataPath.c_str(), NULL, 0);
+		if (length > 0) {
+			char* buffer = new char[length];
+			GetShortPathNameA(dataPath.c_str(), buffer, length);
+			dataPath = buffer;
+			delete [] buffer;
+		}
+#endif
+		Options += "-I \"" + dataPath + "\" ";
 		cl_int err = clBuildProgram(clProgram, 0, NULL, Options.c_str(), NULL, NULL);
 		if(err != CL_SUCCESS) {
 			ofLog(OF_LOG_ERROR, "\n\n ***** Error building program. ***** \n ***********************************\n\n");
